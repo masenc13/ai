@@ -1,0 +1,24 @@
+# 本地設定（不推送）
+.claude/settings.local.json
+.claude/cache/
+.claude/history.jsonl
+.claude/sessions/
+.claude/shell-snapshots/
+.claude/telemetry/
+.claude/plans/
+.claude/file-history/
+.claude/backups/
+.claude/plugins/
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# 暫存檔
+*.tmp
+~$*
