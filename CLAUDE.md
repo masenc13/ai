@@ -79,6 +79,23 @@ All agent definitions are stored under `Agent/`.
 
 ---
 
+## Skill：script-writer
+
+**何時使用：** 使用者提供客戶需求問卷（.docx 路徑或直接貼上 Q1–Q5 內容）時，必須使用 `script-writer` skill 產出提案腳本。
+
+**觸發關鍵字：**
+- 「幫我寫腳本」「根據問卷產出腳本」「用問卷生成腳本」
+- 「提案腳本」「幫我做腳本」「這份問卷幫我寫」
+- 使用者給出 `客戶需求問卷_XXX.docx` 的路徑
+
+**功能：**
+- 讀取問卷 Q1–Q5，自動產出格式完整的 7 段分鏡腳本
+- 輸出包含：核心訊息、故事大綱、風格情緒、目標觀眾、影片規格、分鏡表
+- 格式對標藍麒科技_貿協提案用.docx（Markdown 輸出，可直接複製進 Word）
+- **整合 4 個 Agent 知識庫：** 市場分析師（問卷解讀）→ 創意總監（核心訊息 + VO）→ 導演（影像說明）→ 視覺設計師（字卡策略）
+
+---
+
 ## Skill：translate-formal
 
 **何時使用：** 腳本寫完後，需要把旁白（VO）和字卡翻譯成英文時，必須使用 `translate-formal` skill。
@@ -91,6 +108,26 @@ All agent definitions are stored under `Agent/`.
 - 自動從 .md / .txt / .pptx 腳本中擷取 `VO：` 旁白與 `字卡：` 字卡
 - 翻譯成廣播級正式英文
 - 輸出中英對照表
+
+---
+
+## Skill：pinterest-image-fetch
+
+**何時使用：** 需要從 Pinterest 搜尋並下載參考圖片，嵌入腳本 docx 的「參考圖片」欄時使用。
+
+**觸發關鍵字：**
+- 「幫我找參考圖片」「從 Pinterest 下載圖片」「嵌入參考圖」「加圖片進腳本」
+
+**標準流程：**
+1. 請 Masen 用 **Cookie-Editor** 擴充套件在 pinterest.com 匯出 JSON cookies
+2. 存至 `/tmp/pinterest_cookies.json`
+3. 執行 `/tmp/pinterest_cookie_fetch.js`（Puppeteer stealth + cookie 注入）
+4. 圖片用 PIL `.convert("RGB")` + BytesIO 轉換後嵌入 python-docx
+
+**重要限制：**
+- Pinterest API 封鎖一般開發者（`consumer type not supported`）
+- Masen 的帳號是 Google OAuth，無法 email/password 登入
+- Cookie 有效期約 30 天，過期重新匯出即可
 
 ---
 
@@ -110,6 +147,29 @@ All agent definitions are stored under `Agent/`.
 
 **驗證腳本路徑：**
 `/Users/masen/Documents/ap/.claude/skills/pptx-builder/scripts/validate_pptx.py`
+
+---
+
+## Skill：business-proposal
+
+**何時使用：** 使用者提供一個**客戶資料夾路徑**（內含「專案內容資料夾」素材與一份「影片企劃範例」格式範本），想一次產出企業形象影片提案企劃報告時，必須使用 `business-proposal` skill。
+
+**觸發關鍵字：**
+- `/business-proposal`、「企業形象提案」
+- 「幫我做提案企劃」「根據這個客戶資料夾提案」
+- 直接給出客戶資料夾路徑要你提案
+
+**自動執行四個 Phase（中間不等使用者回覆）：**
+1. 盤點與閱讀：掃描客戶資料夾 → 讀完「專案內容資料夾」全部素材 → 解析「影片企劃範例」並**判斷它是簡報還是文件**
+2. 三位專家協作（平行 Sub-Agent）：市場分析師、創意總監、導演各讀人設+知識庫進入角色，產出各自視角觀點
+3. 整合成三案：把三種視角交叉組合成三個都由市場+創意+影像共同支撐的完整切入點
+4. 產出簡報：用內建產生器 `scripts/proposal_deck.py` 產出 `.pptx`（定案版型，對標鼎康範例），跑 validate_pptx 驗證
+
+**輸出（一份簡報，存回客戶資料夾）：**
+- `<客戶資料夾>/【客戶名稱】企業形象提案企劃.pptx`（封面→大綱→專案理解·市場洞察→每案3頁（區塊頁/核心訊息主視覺/影片架構+提案重點）→結尾，給 context 時 13 頁）
+- 定案視覺：深藍/主藍/淺藍/品牌綠，照片區用原生色塊（禁 JPG/PNG）
+- 範本若是純文字 Word 文件才改輸出 .docx（備案）
+- 完成後統一報告一次，不中途打擾
 
 ---
 
